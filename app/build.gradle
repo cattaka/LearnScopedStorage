@@ -37,6 +37,9 @@ android {
             applicationIdSuffix ".v29"
         }
     }
+    dataBinding {
+        enabled true
+    }
 }
 
 dependencies {
