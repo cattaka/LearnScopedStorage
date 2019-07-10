@@ -1,6 +1,5 @@
 package net.cattaka.android.learnscopedstorage.data
 
-import androidx.databinding.Observable
 import androidx.databinding.ObservableField
 
 class OperationInfo(
@@ -15,15 +14,6 @@ class OperationInfo(
     init {
         label.set(labelValue)
         path.set(pathValue)
-        target.apply {
-            addOnPropertyChangedCallback(object:Observable.OnPropertyChangedCallback() {
-                override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-                    target.get()?.let { targetString.set(it.name)}
-                }
-            })
-            set(targetValue)
-        }
+        target.set(targetValue)
     }
-
-    val targetString: ObservableField<String> = ObservableField("")
 }

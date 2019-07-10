@@ -2,8 +2,11 @@ package net.cattaka.android.learnscopedstorage.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.databinding.BindingAdapter
 import androidx.recyclerview.widget.RecyclerView
 import net.cattaka.android.learnscopedstorage.data.OperationInfo
+import net.cattaka.android.learnscopedstorage.data.OperationTarget
 import net.cattaka.android.learnscopedstorage.databinding.ItemOperationTargetBinding
 
 class OperationInfoAdapter(
@@ -21,4 +24,12 @@ class OperationInfoAdapter(
     override fun getItemCount(): Int = items.size
 
     class ViewHolder(val binding: ItemOperationTargetBinding) : RecyclerView.ViewHolder(binding.root)
+
+    companion object {
+        @JvmStatic
+        @BindingAdapter("text")
+        fun TextView.text(target: OperationTarget?) {
+            text = target?.name ?: ""
+        }
+    }
 }
