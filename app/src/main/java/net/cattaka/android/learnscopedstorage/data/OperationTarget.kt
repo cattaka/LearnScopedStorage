@@ -1,9 +1,10 @@
 package net.cattaka.android.learnscopedstorage.data
 
-import android.app.Activity
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import net.cattaka.android.learnscopedstorage.dialog.PhotoDialog
+import net.cattaka.android.learnscopedstorage.dialog.TextDialog
+import net.cattaka.android.learnscopedstorage.util.concatMessages
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -35,15 +36,18 @@ enum class OperationTarget {
     }
 
     fun read(activity: AppCompatActivity, info: OperationInfo) {
-        when(info.targetValue) {
+        when (info.targetValue) {
             IMAGE -> {
-                PhotoDialog.newInstance(info.assetFileValue)
+                PhotoDialog.newInstance(info.pathValue)
                         .show(activity.supportFragmentManager, "PHOTO_DIALOG")
             }
             AUDIO -> TODO()
             MOVIE -> TODO()
-            DOWNLOAD -> TODO()
-            OTHER -> TODO()
+            DOWNLOAD,
+            OTHER -> {
+                TextDialog.newInstance(info.pathValue)
+                        .show(activity.supportFragmentManager, "TEXT_DIALOG")
+            }
         }
     }
 
@@ -51,7 +55,7 @@ enum class OperationTarget {
     fun write(activity: AppCompatActivity, info: OperationInfo) {
         wrap(activity) {
             FileOutputStream(File(info.pathValue)).use { fout ->
-                FileInputStream(File(info.assetFileValue)).use { fin ->
+                FileInputStream(info.assetFileValue.fileDescriptor).use { fin ->
                     fin.copyTo(fout)
                 }
             }
@@ -62,14 +66,7 @@ enum class OperationTarget {
         try {
             run()
         } catch (e: Exception) {
-            val sb = StringBuilder("Error:")
-            var e2: Throwable? = e
-            while (e2 != null) {
-                sb.append("\n")
-                sb.append(e2.message)
-                e2 = e2.cause
-            }
-            Toast.makeText(activity, sb.toString(), Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity, e.concatMessages(), Toast.LENGTH_SHORT).show()
         }
     }
 }

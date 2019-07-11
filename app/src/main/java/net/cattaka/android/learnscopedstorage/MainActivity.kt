@@ -55,25 +55,25 @@ class MainActivity : AppCompatActivity() {
     private fun prepareItems(): List<OperationInfo> {
         val items = mutableListOf<OperationInfo>()
         val photoDirect = OperationInfo(
-                "file:///android_asset/photo.png",
+                assets.openFd("photo.png"),
                 "Photo",
                 "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).path}/photo.png",
                 OperationTarget.IMAGE
         )
         val audioDirect = OperationInfo(
-                "file:///android_asset/audio.ogg",
+                assets.openFd("audio.ogg"),
                 "Audio",
                 "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).path}/audio.ogg",
                 OperationTarget.AUDIO
         )
         val movieDirect = OperationInfo(
-                "file:///android_asset/movie.webm",
+                assets.openFd("movie.webm"),
                 "Movie",
                 "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).path}/movie.webm",
                 OperationTarget.MOVIE
         )
         val downloadDirect = OperationInfo(
-                "file:///android_asset/text.txt",
+                assets.openFd("text.txt"),
                 "Download",
                 "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path}/text.txt",
                 OperationTarget.DOWNLOAD

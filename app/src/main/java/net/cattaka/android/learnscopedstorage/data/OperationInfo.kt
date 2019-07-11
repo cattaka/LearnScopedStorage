@@ -1,20 +1,21 @@
 package net.cattaka.android.learnscopedstorage.data
 
+import android.content.res.AssetFileDescriptor
 import androidx.databinding.ObservableField
 
 class OperationInfo(
-        _assetsFile: String,
+        _assetsFile: AssetFileDescriptor,
         _label: String,
         _path: String,
         _target: OperationTarget
 ) {
-    val assetFile: ObservableField<String> = ObservableField()
+    val assetFile: ObservableField<AssetFileDescriptor> = ObservableField()
     val label: ObservableField<String> = ObservableField()
     val path: ObservableField<String> = ObservableField()
     val target: ObservableField<OperationTarget> = ObservableField()
 
-    val assetFileValue: String
-        get() = assetFile.get() ?: ""
+    val assetFileValue: AssetFileDescriptor
+        get() = assetFile.get()!!
     val labelValue: String
         get() = label.get() ?: ""
     val pathValue: String
