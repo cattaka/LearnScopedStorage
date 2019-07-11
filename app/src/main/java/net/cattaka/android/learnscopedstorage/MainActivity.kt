@@ -19,12 +19,32 @@ class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
     lateinit var adapter: OperationInfoAdapter
 
+    val operationInfoAdapterListener = object : OperationInfoAdapter.OperationInfoAdapterListener{
+        override fun onCLickCreate(holder: OperationInfoAdapter.ViewHolder, info: OperationInfo) {
+            info.targetValue.create(this@MainActivity, info)
+        }
+
+        override fun onCLickDelete(holder: OperationInfoAdapter.ViewHolder, info: OperationInfo) {
+            info.targetValue.delete(this@MainActivity, info)
+        }
+
+        override fun onCLickRead(holder: OperationInfoAdapter.ViewHolder, info: OperationInfo) {
+            info.targetValue.read(this@MainActivity, info)
+        }
+
+        override fun onCLickWrite(holder: OperationInfoAdapter.ViewHolder, info: OperationInfo) {
+            info.targetValue.write(this@MainActivity, info)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
 
-        adapter = OperationInfoAdapter(prepareItems().toMutableList())
+        adapter = OperationInfoAdapter(prepareItems().toMutableList()).apply {
+            this.listener = operationInfoAdapterListener
+        }
 
         binding.recyclerView.apply {
             this.layoutManager = LinearLayoutManager(this@MainActivity, RecyclerView.VERTICAL, false)
