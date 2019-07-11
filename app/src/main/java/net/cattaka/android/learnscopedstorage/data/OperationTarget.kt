@@ -2,6 +2,8 @@ package net.cattaka.android.learnscopedstorage.data
 
 import android.app.Activity
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import net.cattaka.android.learnscopedstorage.dialog.PhotoDialog
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -16,11 +18,11 @@ enum class OperationTarget {
     ;
 
     @Throws(IOException::class)
-    fun create(activity: Activity, info: OperationInfo) {
+    fun create(activity: AppCompatActivity, info: OperationInfo) {
         write(activity, info)
     }
 
-    fun delete(activity: Activity, info: OperationInfo) {
+    fun delete(activity: AppCompatActivity, info: OperationInfo) {
         wrap(activity) {
             File(info.pathValue).let {
                 if (it.exists()) {
@@ -32,14 +34,21 @@ enum class OperationTarget {
         }
     }
 
-    fun read(activity: Activity, info: OperationInfo) {
-        wrap(activity) {
-            Toast.makeText(activity, "Not implemented yet.", Toast.LENGTH_SHORT).show()
+    fun read(activity: AppCompatActivity, info: OperationInfo) {
+        when(info.targetValue) {
+            IMAGE -> {
+                PhotoDialog.newInstance(info.assetFileValue)
+                        .show(activity.supportFragmentManager, "PHOTO_DIALOG")
+            }
+            AUDIO -> TODO()
+            MOVIE -> TODO()
+            DOWNLOAD -> TODO()
+            OTHER -> TODO()
         }
     }
 
     @Throws(IOException::class)
-    fun write(activity: Activity, info: OperationInfo) {
+    fun write(activity: AppCompatActivity, info: OperationInfo) {
         wrap(activity) {
             FileOutputStream(File(info.pathValue)).use { fout ->
                 FileInputStream(File(info.assetFileValue)).use { fin ->
@@ -49,7 +58,7 @@ enum class OperationTarget {
         }
     }
 
-    private fun wrap(activity: Activity, run: () -> Unit) {
+    private fun wrap(activity: AppCompatActivity, run: () -> Unit) {
         try {
             run()
         } catch (e: Exception) {
