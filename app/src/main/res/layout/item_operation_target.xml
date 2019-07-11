@@ -10,57 +10,80 @@
             type="net.cattaka.android.learnscopedstorage.data.OperationInfo" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="@dimen/spacing_x2">
+        android:layout_margin="@dimen/spacing_x1"
+        android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/text_label"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@{info.label}"
-            app:layout_constraintEnd_toStartOf="@id/button_read"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Label" />
 
-        <TextView
-            android:id="@+id/text_target"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            app:layout_constraintEnd_toStartOf="@id/button_read"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/text_label"
-            app:text="@{info.target}"
-            tools:text="Target" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_x2">
 
-        <TextView
-            android:id="@+id/text_path"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@{info.path}"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/button_read"
-            tools:text="contents://hoge/fuga" />
+            <TextView
+                android:id="@+id/text_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@{info.label}"
+                app:layout_constraintEnd_toStartOf="@id/button_read"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Label" />
 
-        <Button
-            android:id="@+id/button_read"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Read"
-            app:layout_constraintEnd_toStartOf="@+id/button_write"
-            app:layout_constraintTop_toTopOf="parent" />
+            <TextView
+                android:id="@+id/text_target"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toStartOf="@id/button_read"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_label"
+                app:text="@{info.target}"
+                tools:text="Target" />
 
-        <Button
-            android:id="@+id/button_write"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Write"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            <TextView
+                android:id="@+id/text_path"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@{info.path}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/button_read"
+                tools:text="contents://hoge/fuga" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <Button
+                android:id="@+id/button_create"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Create"
+                app:layout_constraintEnd_toStartOf="@+id/button_write"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/button_delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Delete"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/button_read"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Read"
+                app:layout_constraintEnd_toStartOf="@+id/button_write"
+                app:layout_constraintTop_toBottomOf="@id/button_create" />
+
+            <Button
+                android:id="@+id/button_write"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Write"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/button_create" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
 </layout>
