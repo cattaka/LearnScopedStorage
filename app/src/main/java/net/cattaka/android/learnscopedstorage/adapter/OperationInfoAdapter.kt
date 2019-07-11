@@ -12,9 +12,19 @@ import net.cattaka.android.learnscopedstorage.databinding.ItemOperationTargetBin
 class OperationInfoAdapter(
         val items: MutableList<OperationInfo>
 ) : RecyclerView.Adapter<OperationInfoAdapter.ViewHolder>() {
+    var listener : OperationInfoAdapterListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(ItemOperationTargetBinding.inflate(LayoutInflater.from(parent.context),parent, false))
+        return ViewHolder(ItemOperationTargetBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false
+        )).apply {
+            binding.buttonCreate.setOnClickListener { v-> binding.info?.let { listener?.onCLickCreate(this, it)}}
+            binding.buttonDelete.setOnClickListener { v-> binding.info?.let { listener?.onCLickDelete(this, it)}}
+            binding.buttonRead.setOnClickListener { v-> binding.info?.let { listener?.onCLickRead(this, it)}}
+            binding.buttonWrite.setOnClickListener { v-> binding.info?.let { listener?.onCLickWrite(this, it)}}
+        }
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -31,5 +41,12 @@ class OperationInfoAdapter(
         fun TextView.text(target: OperationTarget?) {
             text = target?.name ?: ""
         }
+    }
+
+    interface OperationInfoAdapterListener {
+        fun onCLickCreate(holder: ViewHolder, info: OperationInfo)
+        fun onCLickDelete(holder: ViewHolder, info: OperationInfo)
+        fun onCLickRead(holder: ViewHolder, info: OperationInfo)
+        fun onCLickWrite(holder: ViewHolder, info: OperationInfo)
     }
 }

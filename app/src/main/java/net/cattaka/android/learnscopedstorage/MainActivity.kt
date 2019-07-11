@@ -34,55 +34,45 @@ class MainActivity : AppCompatActivity() {
 
     private fun prepareItems(): List<OperationInfo> {
         val items = mutableListOf<OperationInfo>()
-        val photoDirectPath = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).path}/photo.png"
-        val audioDirectPath = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).path}/audio.mp3"
-        val movieDirectPath = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).path}/movie.mp4"
-        val downloadDirectPath = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path}/download.txt"
-        items.add(OperationInfo(
-                "Photo direct",
-                photoDirectPath,
+        val photoDirect = OperationInfo(
+                "file:///android_asset/photo.png",
+                "Photo",
+                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).path}/photo.png",
                 OperationTarget.IMAGE
-        ))
-        items.add(OperationInfo(
-                "Audio direct",
-                audioDirectPath,
+        )
+        val audioDirect = OperationInfo(
+                "file:///android_asset/audio.ogg",
+                "Audio",
+                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).path}/audio.ogg",
                 OperationTarget.AUDIO
-        ))
-        items.add(OperationInfo(
-                "Movie direct",
-                movieDirectPath,
+        )
+        val movieDirect = OperationInfo(
+                "file:///android_asset/movie.webm",
+                "Movie",
+                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).path}/movie.webm",
                 OperationTarget.MOVIE
-        ))
-        items.add(OperationInfo(
-                "Download direct",
-                downloadDirectPath,
+        )
+        val downloadDirect = OperationInfo(
+                "file:///android_asset/text.txt",
+                "Download",
+                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path}/text.txt",
                 OperationTarget.DOWNLOAD
-        ))
+        )
+        items.add(photoDirect)
+        items.add(audioDirect)
+        items.add(movieDirect)
+        items.add(downloadDirect)
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val photoMediaStoreUri = MediaStore.setRequireOriginal(Uri.fromFile(File(photoDirectPath))).toString()
-            val audioMediaStoreUri = MediaStore.setRequireOriginal(Uri.fromFile(File(audioDirectPath))).toString()
-            val movieMediaStoreUri = MediaStore.setRequireOriginal(Uri.fromFile(File(movieDirectPath))).toString()
-            val downloadMediaStoreUri = MediaStore.setRequireOriginal(Uri.fromFile(File(downloadDirectPath))).toString()
-            items.add(OperationInfo(
-                    "Photo MediaStore Uri",
-                    photoMediaStoreUri,
-                    OperationTarget.IMAGE
-            ))
-            items.add(OperationInfo(
-                    "Audio MediaStore Uri",
-                    audioMediaStoreUri,
-                    OperationTarget.AUDIO
-            ))
-            items.add(OperationInfo(
-                    "Movie MediaStore Uri",
-                    movieMediaStoreUri,
-                    OperationTarget.MOVIE
-            ))
-            items.add(OperationInfo(
-                    "Photo MediaStore Uri",
-                    downloadMediaStoreUri,
-                    OperationTarget.DOWNLOAD
-            ))
+            for (info in arrayOf(photoDirect, audioDirect,movieDirect,downloadDirect)) {
+                val mediaStoreUri = MediaStore.setRequireOriginal(Uri.fromFile(File(info.path.get()!!))).toString()
+                items.add(OperationInfo(
+                        info.assetFile.get()!!,
+                        "${info.label} MediaStore Uri",
+                        mediaStoreUri,
+                        info.target.get()!!
+                ))
+            }
         }
 
         return items
