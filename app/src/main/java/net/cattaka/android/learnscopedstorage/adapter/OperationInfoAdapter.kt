@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.databinding.BindingAdapter
 import androidx.recyclerview.widget.RecyclerView
+import net.cattaka.android.learnscopedstorage.data.OperationDestination
 import net.cattaka.android.learnscopedstorage.data.OperationInfo
 import net.cattaka.android.learnscopedstorage.data.OperationTarget
 import net.cattaka.android.learnscopedstorage.databinding.ItemOperationTargetBinding
@@ -40,6 +41,12 @@ class OperationInfoAdapter(
         @BindingAdapter("text")
         fun TextView.text(target: OperationTarget?) {
             text = target?.name ?: ""
+        }
+
+        @JvmStatic
+        @BindingAdapter("text")
+        fun TextView.text(destination: OperationDestination?) {
+            text = destination?.name ?: ""
         }
     }
 

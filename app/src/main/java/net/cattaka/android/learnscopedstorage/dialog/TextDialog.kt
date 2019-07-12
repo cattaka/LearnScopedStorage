@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.os.bundleOf
 import net.cattaka.android.learnscopedstorage.databinding.DialogTextBinding
@@ -49,7 +50,8 @@ class TextDialog : AppCompatDialogFragment() {
                     binding.text = reader.readLines().joinToString(separator = "\n")
                 }
             } catch (e: IOException) {
-                binding.text = e.concatMessages()
+                Toast.makeText(requireActivity(), e.concatMessages(), Toast.LENGTH_SHORT).show()
+                dismiss()
             }
         }
     }

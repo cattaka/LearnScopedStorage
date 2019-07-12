@@ -43,6 +43,16 @@
                 tools:text="Target" />
 
             <TextView
+                android:id="@+id/text_destination"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toStartOf="@id/button_read"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_target"
+                app:text="@{info.destination}"
+                tools:text="Target" />
+
+            <TextView
                 android:id="@+id/text_path"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

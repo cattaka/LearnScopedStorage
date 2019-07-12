@@ -1,15 +1,21 @@
 package net.cattaka.android.learnscopedstorage.dialog
 
 import android.app.Dialog
+import android.graphics.Bitmap
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.os.bundleOf
+import com.squareup.picasso.Picasso
+import com.squareup.picasso.Target
 import net.cattaka.android.learnscopedstorage.databinding.DialogPhotoBinding
+import net.cattaka.android.learnscopedstorage.util.concatMessages
 
 class PhotoDialog : AppCompatDialogFragment() {
     lateinit var binding: DialogPhotoBinding
@@ -39,7 +45,20 @@ class PhotoDialog : AppCompatDialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        binding.uri = arguments?.getString(KEY_URI)
+        Picasso.get().load(arguments?.getString(KEY_URI))
+                .into(object : Target {
+                    override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+                    }
+
+                    override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
+                        Toast.makeText(requireActivity(), e?.concatMessages().toString(), Toast.LENGTH_SHORT).show()
+                        dismiss()
+                    }
+
+                    override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+                        binding.imageView.setImageBitmap(bitmap)
+                    }
+                })
     }
 
     companion object {
