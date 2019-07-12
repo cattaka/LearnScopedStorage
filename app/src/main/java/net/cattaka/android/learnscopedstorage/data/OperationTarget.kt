@@ -2,8 +2,10 @@ package net.cattaka.android.learnscopedstorage.data
 
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import net.cattaka.android.learnscopedstorage.dialog.AudioDialog
 import net.cattaka.android.learnscopedstorage.dialog.PhotoDialog
 import net.cattaka.android.learnscopedstorage.dialog.TextDialog
+import net.cattaka.android.learnscopedstorage.dialog.VideoDialog
 import net.cattaka.android.learnscopedstorage.util.concatMessages
 import java.io.File
 import java.io.FileInputStream
@@ -41,8 +43,14 @@ enum class OperationTarget {
                 PhotoDialog.newInstance(info.pathValue)
                         .show(activity.supportFragmentManager, "PHOTO_DIALOG")
             }
-            AUDIO -> TODO()
-            MOVIE -> TODO()
+            AUDIO -> {
+                AudioDialog.newInstance(info.pathValue)
+                        .show(activity.supportFragmentManager, "AUDIO_DIALOG")
+            }
+            MOVIE -> {
+                VideoDialog.newInstance(info.pathValue)
+                        .show(activity.supportFragmentManager, "VIDEO_DIALOG")
+            }
             DOWNLOAD,
             OTHER -> {
                 TextDialog.newInstance(info.pathValue)
