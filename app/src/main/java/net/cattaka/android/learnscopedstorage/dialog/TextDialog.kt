@@ -20,9 +20,9 @@ class TextDialog : AppCompatDialogFragment() {
     lateinit var binding: DialogTextBinding
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
         binding = DialogTextBinding.inflate(inflater, container, false)
         binding.root.setOnClickListener { v ->
@@ -61,7 +61,7 @@ class TextDialog : AppCompatDialogFragment() {
     private fun readRawViaMediaStore(path: String): String {
         return if (path.startsWith("content://", false)) {
             val resolver = requireContext().contentResolver
-            resolver.openFileDescriptor(Uri.parse(path), "r", null)?.let { pfd ->
+            resolver.openFileDescriptor(Uri.parse(path), "r", null)?.use { pfd ->
                 FileReader(pfd.fileDescriptor).use { it.readLines().joinToString("\n") }
             } ?: ""
         } else {
@@ -74,7 +74,7 @@ class TextDialog : AppCompatDialogFragment() {
         fun newInstance(uri: String): TextDialog {
             return TextDialog().apply {
                 arguments = bundleOf(
-                        KEY_URI to uri
+                    KEY_URI to uri
                 )
             }
         }

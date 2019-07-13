@@ -52,17 +52,18 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
         }
 
         override fun onCLickCopyUri(holder: OperationInfoAdapter.ViewHolder, info: OperationInfo) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val uri = OperationTarget.findUri(this@MainActivity, info)
-                if (uri != null) {
-                    val cm = (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
-                    cm.setPrimaryClip(ClipData.newPlainText("Uri for ContentResolver", uri.toString()))
-                    Toast.makeText(this@MainActivity, "Copied : $uri", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this@MainActivity, "Failed", Toast.LENGTH_SHORT).show()
-                }
+            val uri = OperationTarget.findUri(this@MainActivity, info)
+            if (uri != null) {
+                val cm = (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
+                cm.setPrimaryClip(
+                    ClipData.newPlainText(
+                        "Uri for ContentResolver",
+                        uri.toString()
+                    )
+                )
+                Toast.makeText(this@MainActivity, "Copied : $uri", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this@MainActivity, "This is not work with under Q", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Failed", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -78,7 +79,7 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
 
         binding.recyclerView.apply {
             this.layoutManager =
-                    LinearLayoutManager(this@MainActivity, RecyclerView.VERTICAL, false)
+                LinearLayoutManager(this@MainActivity, RecyclerView.VERTICAL, false)
             this.adapter = this@MainActivity.adapter
         }
     }
@@ -103,45 +104,45 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
     private fun prepareItems(): List<OperationInfo> {
         val items = mutableListOf<OperationInfo>()
         val photoDirect = OperationInfo(
-                assets.openFd("photo.png"),
-                "Photo",
-                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).path}/photo.png",
-                "image/png",
-                OperationTarget.IMAGE,
-                OperationDestination.EXTERNAL,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            "photo.png",
+            "Photo",
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).path}/photo.png",
+            "image/png",
+            OperationTarget.IMAGE,
+            OperationDestination.EXTERNAL,
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         ) { volumeName -> MediaStore.Images.Media.getContentUri(volumeName) }
         val audioDirect = OperationInfo(
-                assets.openFd("audio.ogg"),
-                "Audio",
-                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).path}/audio.ogg",
-                "audio/ogg",
-                OperationTarget.AUDIO,
-                OperationDestination.EXTERNAL,
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+            "audio.ogg",
+            "Audio",
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).path}/audio.ogg",
+            "audio/ogg",
+            OperationTarget.AUDIO,
+            OperationDestination.EXTERNAL,
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         ) { volumeName -> MediaStore.Audio.Media.getContentUri(volumeName) }
         val movieDirect = OperationInfo(
-                assets.openFd("movie.webm"),
-                "Movie",
-                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).path}/movie.webm",
-                "video/webm",
-                OperationTarget.MOVIE,
-                OperationDestination.EXTERNAL,
-                MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+            "movie.webm",
+            "Movie",
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).path}/movie.webm",
+            "video/webm",
+            OperationTarget.MOVIE,
+            OperationDestination.EXTERNAL,
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         ) { volumeName -> MediaStore.Video.Media.getContentUri(volumeName) }
         val downloadDirect = OperationInfo(
-                assets.openFd("text.txt"),
-                "Download",
-                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path}/text.txt",
-                "plain/text",
-                OperationTarget.DOWNLOAD,
-                OperationDestination.EXTERNAL,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    MediaStore.Downloads.EXTERNAL_CONTENT_URI
-                } else {
-                    // Dummy Uri
-                    Uri.fromFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS))
-                }
+            "text.txt",
+            "Download",
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path}/text.txt",
+            "plain/text",
+            OperationTarget.DOWNLOAD,
+            OperationDestination.EXTERNAL,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI
+            } else {
+                // Dummy Uri
+                Uri.fromFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS))
+            }
         ) { volumeName ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 MediaStore.Downloads.getContentUri(volumeName)
@@ -154,23 +155,24 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
         items.add(movieDirect)
         items.add(downloadDirect)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            for (info in arrayOf(photoDirect, audioDirect, movieDirect, downloadDirect)) {
-                val mediaStoreUri =
-                        MediaStore.setRequireOriginal(Uri.fromFile(File(info.path.get()!!))).toString()
-                items.add(
-                        OperationInfo(
-                                info.assetFileValue,
-                                "${info.label} MediaStore Uri",
-                                mediaStoreUri,
-                                info.mimeValue,
-                                info.targetValue,
-                                OperationDestination.MEDIA_STORE,
-                                info.externalContentUri,
-                                info.getContentUri
-                        )
-                )
+        for (info in arrayOf(photoDirect, audioDirect, movieDirect)) {
+            val mediaStoreUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.setRequireOriginal(Uri.fromFile(File(info.path.get()!!))).toString()
+            } else {
+                Uri.fromFile(File(info.path.get()!!)).toString()
             }
+            items.add(
+                OperationInfo(
+                    info.assetFileValue,
+                    "${info.label} MediaStore Uri",
+                    mediaStoreUri,
+                    info.mimeValue,
+                    info.targetValue,
+                    OperationDestination.MEDIA_STORE,
+                    info.externalContentUri,
+                    info.getContentUri
+                )
+            )
         }
 
         return items
@@ -179,15 +181,11 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
     private fun doWithCheckPermission(type: OperationType, info: OperationInfo) {
         when (info.destinationValue) {
             OperationDestination.MEDIA_STORE -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    when (type) {
-                        OperationType.CREATE -> info.targetValue.createViaMediaStore(this, info)
-                        OperationType.DELETE -> info.targetValue.deleteViaMediaStore(this, info)
-                        OperationType.READ -> info.targetValue.readViaMediaStore(this, info)
-                        OperationType.WRITE -> info.targetValue.writeViaMediaStore(this, info)
-                    }
-                } else {
-                    // MediaStoreCompat is not existed yet...
+                when (type) {
+                    OperationType.CREATE -> info.targetValue.createViaMediaStore(this, info)
+                    OperationType.DELETE -> info.targetValue.deleteViaMediaStore(this, info)
+                    OperationType.READ -> info.targetValue.readViaMediaStore(this, info)
+                    OperationType.WRITE -> info.targetValue.writeViaMediaStore(this, info)
                 }
             }
             OperationDestination.INTERNAL -> {
@@ -229,8 +227,6 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
     }
 
     override fun onClickInputUriDialogOk(uri: String) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            OperationTarget.openViaMediaStore(this, Uri.parse(uri))
-        }
+        OperationTarget.openViaMediaStore(this, Uri.parse(uri))
     }
 }

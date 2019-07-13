@@ -51,14 +51,16 @@ enum class OperationTarget() {
 
     fun writeClassic(activity: AppCompatActivity, info: OperationInfo) {
         wrap(activity) {
-            FileOutputStream(File(info.pathValue)).use { fout ->
-                FileInputStream(info.assetFileValue.fileDescriptor).use { fin ->
-                    fin.skip(info.assetFileValue.startOffset)
-                    val buffer = ByteArray(info.assetFileValue.length.toInt())
-                    fin.read(buffer)
-                    fout.write(buffer)
+            activity.assets.openFd(info.assetFileValue).use { afd ->
+                FileOutputStream(File(info.pathValue)).use { fout ->
+                    FileInputStream(afd.fileDescriptor).use { fin ->
+                        fin.skip(afd.startOffset)
+                        val buffer = ByteArray(afd.length.toInt())
+                        fin.read(buffer)
+                        fout.write(buffer)
+                    }
+                    fout.flush()
                 }
-                fout.flush()
             }
         }
     }
@@ -94,8 +96,10 @@ enum class OperationTarget() {
     fun writeViaMediaStore(activity: AppCompatActivity, info: OperationInfo) {
         wrap(activity) {
             val resolver = activity.contentResolver
-            val item = Uri.parse(info.pathValue).let {
-                val displayName = it.lastPathSegment ?: it.toString()
+            val displayName = Uri.parse(info.pathValue).let {
+                it.lastPathSegment ?: it.toString()
+            }
+            val item = displayName.let {
                 val values = ContentValues().apply {
                     //put(MediaStore.MediaColumns.RELATIVE_PATH, ""/*TODO*/)
                     put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
@@ -113,23 +117,26 @@ enum class OperationTarget() {
             }
             item?.let { item ->
                 resolver.openFileDescriptor(item, "w", null)?.let { pfd ->
-                    FileOutputStream(pfd.fileDescriptor).use { fout ->
-                        FileInputStream(info.assetFileValue.fileDescriptor).use { fin ->
-                            fin.skip(info.assetFileValue.startOffset)
-                            val buffer = ByteArray(info.assetFileValue.length.toInt())
-                            fin.read(buffer)
-                            fout.write(buffer)
+                    activity.assets.openFd(info.assetFileValue).use { afd ->
+                        FileOutputStream(pfd.fileDescriptor).use { fout ->
+                            FileInputStream(afd.fileDescriptor).use { fin ->
+                                fin.skip(afd.startOffset)
+                                val buffer = ByteArray(afd.length.toInt())
+                                fin.read(buffer)
+                                fout.write(buffer)
+                            }
+                            fout.flush()
                         }
-                        fout.flush()
                     }
                 }
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    val values = ContentValues().apply {
+                val values = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         put(MediaStore.MediaColumns.IS_PENDING, 0)
                     }
-                    resolver.update(item, values, null, null)
                 }
+                resolver.update(item, values, null, null)
                 Toast.makeText(activity, "Succeed", Toast.LENGTH_SHORT).show()
             } ?: Toast.makeText(activity, "Failed", Toast.LENGTH_SHORT).show()
         }
@@ -242,7 +249,13 @@ enum class OperationTarget() {
                         null,
                         bundleOf(MediaStore.MediaColumns.DISPLAY_NAME to displayName),
                         null
-                )
+                )?.use { c ->
+                    while (c.moveToNext()) {
+                        val columnIndex = c.getColumnIndexOrThrow(BaseColumns._ID)
+                        return@use c.getLong(columnIndex)
+                    }
+                    return@use null
+                }
             } else {
                 resolver.query(
                         info.externalContentUri,
@@ -250,13 +263,13 @@ enum class OperationTarget() {
                         "${MediaStore.MediaColumns.DISPLAY_NAME}=?",
                         arrayOf(displayName),
                         null
-                )
-            }?.use { c ->
-                while (c.moveToNext()) {
-                    val columnIndex = c.getColumnIndexOrThrow(BaseColumns._ID)
-                    return@use c.getLong(columnIndex)
+                )?.use { c ->
+                    while (c.moveToNext()) {
+                        val columnIndex = c.getColumnIndexOrThrow(BaseColumns._ID)
+                        return@use c.getLong(columnIndex)
+                    }
+                    return@use null
                 }
-                return@use null
             }?.let {
                 ContentUris.withAppendedId(info.externalContentUri, it)
             }
