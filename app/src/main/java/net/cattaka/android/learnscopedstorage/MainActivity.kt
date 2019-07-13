@@ -6,6 +6,9 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.view.Menu
+import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.arch.core.util.Function
 import androidx.databinding.DataBindingUtil
@@ -17,12 +20,13 @@ import net.cattaka.android.learnscopedstorage.data.OperationInfo
 import net.cattaka.android.learnscopedstorage.data.OperationTarget
 import net.cattaka.android.learnscopedstorage.data.OperationType
 import net.cattaka.android.learnscopedstorage.databinding.ActivityMainBinding
+import net.cattaka.android.learnscopedstorage.dialog.InputUriDialog
 import permissions.dispatcher.NeedsPermission
 import permissions.dispatcher.RuntimePermissions
 import java.io.File
 
 @RuntimePermissions
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener {
     lateinit var binding: ActivityMainBinding
     lateinit var adapter: OperationInfoAdapter
 
@@ -55,44 +59,61 @@ class MainActivity : AppCompatActivity() {
 
         binding.recyclerView.apply {
             this.layoutManager =
-                LinearLayoutManager(this@MainActivity, RecyclerView.VERTICAL, false)
+                    LinearLayoutManager(this@MainActivity, RecyclerView.VERTICAL, false)
             this.adapter = this@MainActivity.adapter
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.activity_main, menu);
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_open_uri -> {
+                InputUriDialog.newInstance().show(supportFragmentManager, "INPUT_URI_DIALOG")
+                true
+            }
+            else -> {
+                super.onOptionsItemSelected(item)
+            }
         }
     }
 
     private fun prepareItems(): List<OperationInfo> {
         val items = mutableListOf<OperationInfo>()
         val photoDirect = OperationInfo(
-            assets.openFd("photo.png"),
-            "Photo",
-            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).path}/photo.png",
-            "image/png",
-            OperationTarget.IMAGE,
-            OperationDestination.EXTERNAL
+                assets.openFd("photo.png"),
+                "Photo",
+                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).path}/photo.png",
+                "image/png",
+                OperationTarget.IMAGE,
+                OperationDestination.EXTERNAL
         ) { volumeName -> MediaStore.Images.Media.getContentUri(volumeName) }
         val audioDirect = OperationInfo(
-            assets.openFd("audio.ogg"),
-            "Audio",
-            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).path}/audio.ogg",
-            "audio/ogg",
-            OperationTarget.AUDIO,
-            OperationDestination.EXTERNAL
+                assets.openFd("audio.ogg"),
+                "Audio",
+                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).path}/audio.ogg",
+                "audio/ogg",
+                OperationTarget.AUDIO,
+                OperationDestination.EXTERNAL
         ) { volumeName -> MediaStore.Audio.Media.getContentUri(volumeName) }
         val movieDirect = OperationInfo(
-            assets.openFd("movie.webm"),
-            "Movie",
-            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).path}/movie.webm",
-            "video/webm",
-            OperationTarget.MOVIE,
-            OperationDestination.EXTERNAL
+                assets.openFd("movie.webm"),
+                "Movie",
+                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).path}/movie.webm",
+                "video/webm",
+                OperationTarget.MOVIE,
+                OperationDestination.EXTERNAL
         ) { volumeName -> MediaStore.Video.Media.getContentUri(volumeName) }
         val downloadDirect = OperationInfo(
-            assets.openFd("text.txt"),
-            "Download",
-            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path}/text.txt",
-            "plain/text",
-            OperationTarget.DOWNLOAD,
-            OperationDestination.EXTERNAL
+                assets.openFd("text.txt"),
+                "Download",
+                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path}/text.txt",
+                "plain/text",
+                OperationTarget.DOWNLOAD,
+                OperationDestination.EXTERNAL
         ) { volumeName ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 MediaStore.Downloads.getContentUri(volumeName)
@@ -108,17 +129,17 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             for (info in arrayOf(photoDirect, audioDirect, movieDirect, downloadDirect)) {
                 val mediaStoreUri =
-                    MediaStore.setRequireOriginal(Uri.fromFile(File(info.path.get()!!))).toString()
+                        MediaStore.setRequireOriginal(Uri.fromFile(File(info.path.get()!!))).toString()
                 items.add(
-                    OperationInfo(
-                        info.assetFileValue,
-                        "${info.label} MediaStore Uri",
-                        mediaStoreUri,
-                        info.mimeValue,
-                        info.targetValue,
-                        OperationDestination.MEDIA_STORE,
-                        info.getContentUri
-                    )
+                        OperationInfo(
+                                info.assetFileValue,
+                                "${info.label} MediaStore Uri",
+                                mediaStoreUri,
+                                info.mimeValue,
+                                info.targetValue,
+                                OperationDestination.MEDIA_STORE,
+                                info.getContentUri
+                        )
                 )
             }
         }
@@ -176,5 +197,9 @@ class MainActivity : AppCompatActivity() {
     @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     fun writeAction(f: Function<MainActivity, Unit>) {
         f.apply(this)
+    }
+
+    override fun onClickInputUriDialogOk(uri: String) {
+        Toast.makeText(this, "Not implemented yet : $uri", Toast.LENGTH_SHORT).show()
     }
 }
