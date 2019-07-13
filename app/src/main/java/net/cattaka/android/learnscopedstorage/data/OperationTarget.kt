@@ -10,7 +10,6 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
-import net.cattaka.android.learnscopedstorage.BuildConfig
 import net.cattaka.android.learnscopedstorage.dialog.AudioDialog
 import net.cattaka.android.learnscopedstorage.dialog.PhotoDialog
 import net.cattaka.android.learnscopedstorage.dialog.TextDialog
@@ -71,7 +70,7 @@ enum class OperationTarget() {
             val uri = Uri.parse(info.pathValue)
             val displayName = uri.lastPathSegment ?: uri.toString()
             val values = ContentValues().apply {
-                put(MediaStore.MediaColumns.RELATIVE_PATH, BuildConfig.APPLICATION_ID)
+                //put(MediaStore.MediaColumns.RELATIVE_PATH, ""/*TODO*/)
                 put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
                 put(MediaStore.MediaColumns.MIME_TYPE, info.mimeValue)
                 put(MediaStore.MediaColumns.IS_PENDING, 0)
@@ -94,7 +93,7 @@ enum class OperationTarget() {
             val uri = Uri.parse(info.pathValue)
             val displayName = uri.lastPathSegment ?: uri.toString()
             val values = ContentValues().apply {
-                put(MediaStore.MediaColumns.RELATIVE_PATH, BuildConfig.APPLICATION_ID)
+                //put(MediaStore.MediaColumns.RELATIVE_PATH, ""/*TODO*/)
                 put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
                 put(MediaStore.MediaColumns.MIME_TYPE, info.mimeValue)
                 put(MediaStore.MediaColumns.IS_PENDING, 1)

@@ -17,7 +17,7 @@ import net.cattaka.android.learnscopedstorage.util.concatMessages
 
 class AudioDialog : AppCompatDialogFragment() {
     lateinit var binding: DialogAudioBinding
-    lateinit var mediaPlayer: MediaPlayer
+    var mediaPlayer: MediaPlayer? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DialogAudioBinding.inflate(inflater, container, false)
@@ -25,10 +25,12 @@ class AudioDialog : AppCompatDialogFragment() {
             dismiss()
         }
 
-        binding.buttonPrev.setOnClickListener { v -> mediaPlayer.seekTo(0) }
-        binding.buttonPlay.setOnClickListener { v -> mediaPlayer.start() }
-        binding.buttonPause.setOnClickListener { v -> mediaPlayer.stop() }
-        binding.buttonNext.setOnClickListener { v -> mediaPlayer.seekTo(mediaPlayer.duration) }
+        binding.buttonPrev.setOnClickListener { v -> mediaPlayer?.seekTo(0) }
+        binding.buttonPlay.setOnClickListener { v -> mediaPlayer?.start() }
+        binding.buttonPause.setOnClickListener { v -> mediaPlayer?.stop() }
+        binding.buttonNext.setOnClickListener { v ->
+            mediaPlayer?.seekTo(mediaPlayer?.duration ?: 0)
+        }
 
         return binding.root
     }
@@ -54,7 +56,7 @@ class AudioDialog : AppCompatDialogFragment() {
         try {
             if (uri != null) {
                 mediaPlayer = MediaPlayer.create(requireContext(), uri)
-                mediaPlayer.start()
+                mediaPlayer?.start()
             } else {
                 Toast.makeText(requireActivity(), "Uri is missing", Toast.LENGTH_SHORT).show()
                 dismiss()
@@ -67,7 +69,7 @@ class AudioDialog : AppCompatDialogFragment() {
 
     override fun onStop() {
         super.onStop()
-        mediaPlayer.stop()
+        mediaPlayer?.stop()
     }
 
     companion object {
