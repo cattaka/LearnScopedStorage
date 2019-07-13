@@ -1,6 +1,5 @@
 package net.cattaka.android.learnscopedstorage.data
 
-import android.annotation.TargetApi
 import android.content.ContentUris
 import android.content.ContentValues
 import android.net.Uri
@@ -8,7 +7,6 @@ import android.os.Build
 import android.provider.BaseColumns
 import android.provider.MediaStore
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import net.cattaka.android.learnscopedstorage.dialog.AudioDialog
@@ -65,7 +63,6 @@ enum class OperationTarget() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
     fun createViaMediaStore(activity: AppCompatActivity, info: OperationInfo) {
         wrap(activity) {
             val uri = Uri.parse(info.pathValue)
@@ -74,11 +71,17 @@ enum class OperationTarget() {
                 //put(MediaStore.MediaColumns.RELATIVE_PATH, ""/*TODO*/)
                 put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
                 put(MediaStore.MediaColumns.MIME_TYPE, info.mimeValue)
-                put(MediaStore.MediaColumns.IS_PENDING, 0)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.MediaColumns.IS_PENDING, 0)
+                }
             }
 
             val resolver = activity.contentResolver
-            val collection = info.getContentUri(MediaStore.VOLUME_EXTERNAL)
+            val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                info.getContentUri(MediaStore.VOLUME_EXTERNAL)
+            } else {
+                info.externalContentUri
+            }
             val item = resolver.insert(collection, values)
             if (item != null) {
                 Toast.makeText(activity, "Succeed", Toast.LENGTH_SHORT).show()
@@ -88,21 +91,27 @@ enum class OperationTarget() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
     fun writeViaMediaStore(activity: AppCompatActivity, info: OperationInfo) {
         wrap(activity) {
-            val uri = Uri.parse(info.pathValue)
-            val displayName = uri.lastPathSegment ?: uri.toString()
-            val values = ContentValues().apply {
-                //put(MediaStore.MediaColumns.RELATIVE_PATH, ""/*TODO*/)
-                put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
-                put(MediaStore.MediaColumns.MIME_TYPE, info.mimeValue)
-                put(MediaStore.MediaColumns.IS_PENDING, 1)
-            }
-
             val resolver = activity.contentResolver
-            val collection = info.getContentUri(MediaStore.VOLUME_EXTERNAL)
-            resolver.insert(collection, values)?.let { item ->
+            val item = Uri.parse(info.pathValue).let {
+                val displayName = it.lastPathSegment ?: it.toString()
+                val values = ContentValues().apply {
+                    //put(MediaStore.MediaColumns.RELATIVE_PATH, ""/*TODO*/)
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+                    put(MediaStore.MediaColumns.MIME_TYPE, info.mimeValue)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        put(MediaStore.MediaColumns.IS_PENDING, 1)
+                    }
+                }
+                val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    info.getContentUri(MediaStore.VOLUME_EXTERNAL)
+                } else {
+                    info.externalContentUri
+                }
+                resolver.insert(collection, values)
+            }
+            item?.let { item ->
                 resolver.openFileDescriptor(item, "w", null)?.let { pfd ->
                     FileOutputStream(pfd.fileDescriptor).use { fout ->
                         FileInputStream(info.assetFileValue.fileDescriptor).use { fin ->
@@ -115,38 +124,21 @@ enum class OperationTarget() {
                     }
                 }
 
-                values.clear()
-                values.put(MediaStore.MediaColumns.IS_PENDING, 0)
-                resolver.update(item, values, null, null)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val values = ContentValues().apply {
+                        put(MediaStore.MediaColumns.IS_PENDING, 0)
+                    }
+                    resolver.update(item, values, null, null)
+                }
                 Toast.makeText(activity, "Succeed", Toast.LENGTH_SHORT).show()
             } ?: Toast.makeText(activity, "Failed", Toast.LENGTH_SHORT).show()
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
     fun readViaMediaStore(activity: AppCompatActivity, info: OperationInfo) {
         wrap(activity) {
             val uri = Uri.parse(info.pathValue)
-            val displayName = uri.lastPathSegment ?: uri.toString()
-
-            val resolver = activity.contentResolver
-            val collection = info.getContentUri(MediaStore.VOLUME_EXTERNAL)
-            val collectionWithPending = MediaStore.setIncludePending(collection)
-            val itemUri = resolver.query(
-                    collectionWithPending,
-                    null,
-                    bundleOf(MediaStore.MediaColumns.DISPLAY_NAME to displayName),
-                    null
-            )?.use { c ->
-                while (c.moveToNext()) {
-                    val columnIndex = c.getColumnIndexOrThrow(MediaStore.Images.ImageColumns._ID)
-                    return@use c.getString(columnIndex)
-                }
-                return@use null
-            }?.let {
-                collectionWithPending.buildUpon().appendPath(it).build()
-            }
-
+            val itemUri = findUri(activity, info)
             if (itemUri != null) {
                 openByDialog(activity, info.targetValue, itemUri)
             } else {
@@ -155,29 +147,14 @@ enum class OperationTarget() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
     fun deleteViaMediaStore(activity: AppCompatActivity, info: OperationInfo) {
         wrap(activity) {
             val uri = Uri.parse(info.pathValue)
             val displayName = uri.lastPathSegment ?: uri.toString()
 
             val resolver = activity.contentResolver
-            val collection = info.getContentUri(MediaStore.VOLUME_EXTERNAL)
-            val collectionWithPending = MediaStore.setIncludePending(collection)
-            val count = resolver.query(
-                    collectionWithPending,
-                    null,
-                    bundleOf(MediaStore.MediaColumns.DISPLAY_NAME to displayName),
-                    null
-            )?.use { c ->
-                while (c.moveToNext()) {
-                    val columnIndex = c.getColumnIndexOrThrow(MediaStore.Images.ImageColumns._ID)
-                    return@use c.getString(columnIndex)
-                }
-                return@use null
-            }?.let {
-                val itemUri = collectionWithPending.buildUpon().appendPath(it).build()
-                resolver.delete(itemUri, null, null)
+            val count = findUri(activity, info)?.let {
+                resolver.delete(it, null, null)
             } ?: 0
 
             val message = if (count == 0) "Failed" else "Succeed"
@@ -254,23 +231,27 @@ enum class OperationTarget() {
             }
         }
 
-        @TargetApi(Build.VERSION_CODES.O)
-        fun findUri(activity: AppCompatActivity, info: OperationInfo): Uri? {
+        fun findUri(activity: AppCompatActivity, info: OperationInfo, includePending: Boolean = true): Uri? {
             val uri = Uri.parse(info.pathValue)
             val displayName = uri.lastPathSegment ?: uri.toString()
 
             val resolver = activity.contentResolver
-            val collectionUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                MediaStore.setIncludePending(info.getContentUri(MediaStore.VOLUME_EXTERNAL))
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                resolver.query(
+                        MediaStore.setIncludePending(info.getContentUri(MediaStore.VOLUME_EXTERNAL)),
+                        null,
+                        bundleOf(MediaStore.MediaColumns.DISPLAY_NAME to displayName),
+                        null
+                )
             } else {
-                info.getContentUri("external")
-            }
-            return resolver.query(
-                    collectionUri,
-                    null,
-                    bundleOf(MediaStore.MediaColumns.DISPLAY_NAME to displayName),
-                    null
-            )?.use { c ->
+                resolver.query(
+                        info.externalContentUri,
+                        null,
+                        "${MediaStore.MediaColumns.DISPLAY_NAME}=?",
+                        arrayOf(displayName),
+                        null
+                )
+            }?.use { c ->
                 while (c.moveToNext()) {
                     val columnIndex = c.getColumnIndexOrThrow(BaseColumns._ID)
                     return@use c.getLong(columnIndex)
