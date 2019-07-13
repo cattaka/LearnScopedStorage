@@ -54,7 +54,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.recyclerView.apply {
-            this.layoutManager = LinearLayoutManager(this@MainActivity, RecyclerView.VERTICAL, false)
+            this.layoutManager =
+                LinearLayoutManager(this@MainActivity, RecyclerView.VERTICAL, false)
             this.adapter = this@MainActivity.adapter
         }
     }
@@ -62,37 +63,43 @@ class MainActivity : AppCompatActivity() {
     private fun prepareItems(): List<OperationInfo> {
         val items = mutableListOf<OperationInfo>()
         val photoDirect = OperationInfo(
-                assets.openFd("photo.png"),
-                "Photo",
-                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).path}/photo.png",
-                "image/png",
-                OperationTarget.IMAGE,
-                OperationDestination.EXTERNAL
-        )
+            assets.openFd("photo.png"),
+            "Photo",
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).path}/photo.png",
+            "image/png",
+            OperationTarget.IMAGE,
+            OperationDestination.EXTERNAL
+        ) { volumeName -> MediaStore.Images.Media.getContentUri(volumeName) }
         val audioDirect = OperationInfo(
-                assets.openFd("audio.ogg"),
-                "Audio",
-                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).path}/audio.ogg",
-                "image/ogg",
-                OperationTarget.AUDIO,
-                OperationDestination.EXTERNAL
-        )
+            assets.openFd("audio.ogg"),
+            "Audio",
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).path}/audio.ogg",
+            "audio/ogg",
+            OperationTarget.AUDIO,
+            OperationDestination.EXTERNAL
+        ) { volumeName -> MediaStore.Audio.Media.getContentUri(volumeName) }
         val movieDirect = OperationInfo(
-                assets.openFd("movie.webm"),
-                "Movie",
-                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).path}/movie.webm",
-                "video/webm",
-                OperationTarget.MOVIE,
-                OperationDestination.EXTERNAL
-        )
+            assets.openFd("movie.webm"),
+            "Movie",
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).path}/movie.webm",
+            "video/webm",
+            OperationTarget.MOVIE,
+            OperationDestination.EXTERNAL
+        ) { volumeName -> MediaStore.Video.Media.getContentUri(volumeName) }
         val downloadDirect = OperationInfo(
-                assets.openFd("text.txt"),
-                "Download",
-                "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path}/text.txt",
-                "plain/text",
-                OperationTarget.DOWNLOAD,
-                OperationDestination.EXTERNAL
-        )
+            assets.openFd("text.txt"),
+            "Download",
+            "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path}/text.txt",
+            "plain/text",
+            OperationTarget.DOWNLOAD,
+            OperationDestination.EXTERNAL
+        ) { volumeName ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.Downloads.getContentUri(volumeName)
+            } else {
+                throw IllegalArgumentException("Error case")
+            }
+        }
         items.add(photoDirect)
         items.add(audioDirect)
         items.add(movieDirect)
@@ -100,15 +107,19 @@ class MainActivity : AppCompatActivity() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             for (info in arrayOf(photoDirect, audioDirect, movieDirect, downloadDirect)) {
-                val mediaStoreUri = MediaStore.setRequireOriginal(Uri.fromFile(File(info.path.get()!!))).toString()
-                items.add(OperationInfo(
+                val mediaStoreUri =
+                    MediaStore.setRequireOriginal(Uri.fromFile(File(info.path.get()!!))).toString()
+                items.add(
+                    OperationInfo(
                         info.assetFileValue,
                         "${info.label} MediaStore Uri",
                         mediaStoreUri,
                         info.mimeValue,
                         info.targetValue,
-                        OperationDestination.MEDIA_STORE
-                ))
+                        OperationDestination.MEDIA_STORE,
+                        info.getContentUri
+                    )
+                )
             }
         }
 
@@ -118,11 +129,15 @@ class MainActivity : AppCompatActivity() {
     private fun doWithCheckPermission(type: OperationType, info: OperationInfo) {
         when (info.destinationValue) {
             OperationDestination.MEDIA_STORE -> {
-                when (type) {
-                    OperationType.CREATE -> info.targetValue.createClassic(this, info)
-                    OperationType.DELETE -> info.targetValue.deleteClassic(this, info)
-                    OperationType.READ -> info.targetValue.readClassic(this, info)
-                    OperationType.WRITE -> info.targetValue.writeClassic(this, info)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    when (type) {
+                        OperationType.CREATE -> info.targetValue.createViaMediaStore(this, info)
+                        OperationType.DELETE -> info.targetValue.deleteViaMediaStore(this, info)
+                        OperationType.READ -> info.targetValue.readViaMediaStore(this, info)
+                        OperationType.WRITE -> info.targetValue.writeViaMediaStore(this, info)
+                    }
+                } else {
+                    // MediaStoreCompat is not existed yet...
                 }
             }
             OperationDestination.INTERNAL -> {

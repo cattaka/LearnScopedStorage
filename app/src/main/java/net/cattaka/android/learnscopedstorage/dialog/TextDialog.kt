@@ -2,6 +2,7 @@ package net.cattaka.android.learnscopedstorage.dialog
 
 import android.app.Dialog
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,12 +15,15 @@ import net.cattaka.android.learnscopedstorage.databinding.DialogTextBinding
 import net.cattaka.android.learnscopedstorage.util.concatMessages
 import java.io.File
 import java.io.FileReader
-import java.io.IOException
 
 class TextDialog : AppCompatDialogFragment() {
     lateinit var binding: DialogTextBinding
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         binding = DialogTextBinding.inflate(inflater, container, false)
         binding.root.setOnClickListener { v ->
             dismiss()
@@ -46,13 +50,22 @@ class TextDialog : AppCompatDialogFragment() {
         super.onStart()
         arguments?.getString(KEY_URI)?.let { path ->
             try {
-                FileReader(File(path)).use { reader ->
-                    binding.text = reader.readLines().joinToString(separator = "\n")
-                }
-            } catch (e: IOException) {
-                Toast.makeText(requireActivity(), e.concatMessages(), Toast.LENGTH_SHORT).show()
+                binding.text = readRawViaMediaStore(path)
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), e.concatMessages(), Toast.LENGTH_SHORT).show()
                 dismiss()
             }
+        }
+    }
+
+    private fun readRawViaMediaStore(path: String): String {
+        return if (path.startsWith("content://", false)) {
+            val resolver = requireContext().contentResolver
+            resolver.openFileDescriptor(Uri.parse(path), "r", null)?.let { pfd ->
+                FileReader(pfd.fileDescriptor).use { it.readLines().joinToString("\n") }
+            } ?: ""
+        } else {
+            FileReader(File(path)).use { it.readLines().joinToString("\n") }
         }
     }
 
@@ -61,7 +74,7 @@ class TextDialog : AppCompatDialogFragment() {
         fun newInstance(uri: String): TextDialog {
             return TextDialog().apply {
                 arguments = bundleOf(
-                        KEY_URI to uri
+                    KEY_URI to uri
                 )
             }
         }

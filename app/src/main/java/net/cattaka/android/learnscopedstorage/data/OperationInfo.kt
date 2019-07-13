@@ -1,6 +1,7 @@
 package net.cattaka.android.learnscopedstorage.data
 
 import android.content.res.AssetFileDescriptor
+import android.net.Uri
 import androidx.databinding.ObservableField
 
 class OperationInfo(
@@ -9,7 +10,8 @@ class OperationInfo(
     _path: String,
     _mime: String,
     _target: OperationTarget,
-    _destination: OperationDestination
+    _destination: OperationDestination,
+    val getContentUri: (volumeName: String) -> Uri
 ) {
     val assetFile: ObservableField<AssetFileDescriptor> = ObservableField()
     val label: ObservableField<String> = ObservableField()
@@ -35,7 +37,7 @@ class OperationInfo(
         assetFile.set(_assetsFile)
         label.set(_label)
         path.set(_path)
-        mime.set(_path)
+        mime.set(_mime)
         target.set(_target)
         destination.set(_destination)
     }
