@@ -1,8 +1,6 @@
 package net.cattaka.android.learnscopedstorage.util
 
-import android.widget.Toast
-
-fun Throwable.concatMessages() : String {
+fun Throwable.concatMessages(): String {
     val sb = StringBuilder("Error:")
     var e2: Throwable? = this
     while (e2 != null) {

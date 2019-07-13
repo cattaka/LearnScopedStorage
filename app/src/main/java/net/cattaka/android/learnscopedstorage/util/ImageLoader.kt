@@ -9,7 +9,7 @@ object ImageLoader {
     @BindingAdapter("loadImage")
     fun ImageView.loadImage(uri: String?) {
         Picasso.get()
-            .load(uri)
-            .into(this)
+                .load(uri)
+                .into(this)
     }
 }
