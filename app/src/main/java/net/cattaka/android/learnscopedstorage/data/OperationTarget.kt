@@ -31,7 +31,8 @@ enum class OperationTarget {
                 if (it.exists()) {
                     it.delete()
                 } else {
-                    Toast.makeText(activity, "File is not exist : ${it.path}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(activity, "File is not exist : ${it.path}", Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
         }
@@ -41,20 +42,20 @@ enum class OperationTarget {
         when (info.targetValue) {
             IMAGE -> {
                 PhotoDialog.newInstance(info.pathValue)
-                        .show(activity.supportFragmentManager, "PHOTO_DIALOG")
+                    .show(activity.supportFragmentManager, "PHOTO_DIALOG")
             }
             AUDIO -> {
                 AudioDialog.newInstance(info.pathValue)
-                        .show(activity.supportFragmentManager, "AUDIO_DIALOG")
+                    .show(activity.supportFragmentManager, "AUDIO_DIALOG")
             }
             MOVIE -> {
                 VideoDialog.newInstance(info.pathValue)
-                        .show(activity.supportFragmentManager, "VIDEO_DIALOG")
+                    .show(activity.supportFragmentManager, "VIDEO_DIALOG")
             }
             DOWNLOAD,
             OTHER -> {
                 TextDialog.newInstance(info.pathValue)
-                        .show(activity.supportFragmentManager, "TEXT_DIALOG")
+                    .show(activity.supportFragmentManager, "TEXT_DIALOG")
             }
         }
     }
@@ -64,7 +65,11 @@ enum class OperationTarget {
         wrap(activity) {
             FileOutputStream(File(info.pathValue)).use { fout ->
                 FileInputStream(info.assetFileValue.fileDescriptor).use { fin ->
-                    fin.copyTo(fout)
+                    fin.skip(info.assetFileValue.startOffset)
+                    val buffer = ByteArray(info.assetFileValue.length.toInt())
+                    fin.read(buffer)
+                    fout.write(buffer)
+                    fout.flush()
                 }
             }
         }

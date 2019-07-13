@@ -20,7 +20,11 @@ import net.cattaka.android.learnscopedstorage.util.concatMessages
 class PhotoDialog : AppCompatDialogFragment() {
     lateinit var binding: DialogPhotoBinding
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         binding = DialogPhotoBinding.inflate(inflater, container, false)
         binding.root.setOnClickListener { v ->
             dismiss()
@@ -45,20 +49,31 @@ class PhotoDialog : AppCompatDialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        Picasso.get().load(arguments?.getString(KEY_URI))
-                .into(object : Target {
-                    override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
-                    }
+        val uri = arguments?.getString(KEY_URI)?.let {
+            if (it.startsWith("/")) {
+                "file://$it"
+            } else {
+                it
+            }
+        }
+        Picasso.get().load(uri)
+            .into(object : Target {
+                override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+                }
 
-                    override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
-                        Toast.makeText(requireActivity(), e?.concatMessages().toString(), Toast.LENGTH_SHORT).show()
-                        dismiss()
-                    }
+                override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
+                    Toast.makeText(
+                        requireActivity(),
+                        e?.concatMessages().toString(),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    dismiss()
+                }
 
-                    override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
-                        binding.imageView.setImageBitmap(bitmap)
-                    }
-                })
+                override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+                    binding.imageView.setImageBitmap(bitmap)
+                }
+            })
     }
 
     companion object {
@@ -66,7 +81,7 @@ class PhotoDialog : AppCompatDialogFragment() {
         fun newInstance(uri: String): PhotoDialog {
             return PhotoDialog().apply {
                 arguments = bundleOf(
-                        KEY_URI to uri
+                    KEY_URI to uri
                 )
             }
         }
