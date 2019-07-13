@@ -65,6 +65,7 @@ class MainActivity : AppCompatActivity() {
                 assets.openFd("photo.png"),
                 "Photo",
                 "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).path}/photo.png",
+                "image/png",
                 OperationTarget.IMAGE,
                 OperationDestination.EXTERNAL
         )
@@ -72,6 +73,7 @@ class MainActivity : AppCompatActivity() {
                 assets.openFd("audio.ogg"),
                 "Audio",
                 "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).path}/audio.ogg",
+                "image/ogg",
                 OperationTarget.AUDIO,
                 OperationDestination.EXTERNAL
         )
@@ -79,6 +81,7 @@ class MainActivity : AppCompatActivity() {
                 assets.openFd("movie.webm"),
                 "Movie",
                 "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).path}/movie.webm",
+                "video/webm",
                 OperationTarget.MOVIE,
                 OperationDestination.EXTERNAL
         )
@@ -86,6 +89,7 @@ class MainActivity : AppCompatActivity() {
                 assets.openFd("text.txt"),
                 "Download",
                 "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path}/text.txt",
+                "plain/text",
                 OperationTarget.DOWNLOAD,
                 OperationDestination.EXTERNAL
         )
@@ -98,10 +102,11 @@ class MainActivity : AppCompatActivity() {
             for (info in arrayOf(photoDirect, audioDirect, movieDirect, downloadDirect)) {
                 val mediaStoreUri = MediaStore.setRequireOriginal(Uri.fromFile(File(info.path.get()!!))).toString()
                 items.add(OperationInfo(
-                        info.assetFile.get()!!,
+                        info.assetFileValue,
                         "${info.label} MediaStore Uri",
                         mediaStoreUri,
-                        info.target.get()!!,
+                        info.mimeValue,
+                        info.targetValue,
                         OperationDestination.MEDIA_STORE
                 ))
             }

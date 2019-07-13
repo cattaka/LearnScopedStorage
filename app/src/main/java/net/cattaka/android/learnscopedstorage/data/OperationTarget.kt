@@ -1,6 +1,11 @@
 package net.cattaka.android.learnscopedstorage.data
 
+import android.content.ContentValues
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import net.cattaka.android.learnscopedstorage.dialog.AudioDialog
 import net.cattaka.android.learnscopedstorage.dialog.PhotoDialog
@@ -74,6 +79,23 @@ enum class OperationTarget {
                 }
                 fout.flush()
             }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    @Throws(IOException::class)
+    fun createViaMediaStore(activity: AppCompatActivity, info: OperationInfo) {
+        wrap(activity) {
+            val uri = Uri.parse(info.pathValue)
+            val values = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, uri.lastPathSegment ?: "")
+                put(MediaStore.Images.Media.MIME_TYPE, info.mimeValue)
+                put(MediaStore.Images.Media.IS_PENDING, 1)
+            }
+
+            val resolver = activity.contentResolver
+            val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+            val item = resolver.insert(collection, values)
         }
     }
 
