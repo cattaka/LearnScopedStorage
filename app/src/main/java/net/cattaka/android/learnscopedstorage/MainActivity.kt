@@ -1,11 +1,13 @@
 package net.cattaka.android.learnscopedstorage
 
+import android.Manifest
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.appcompat.app.AppCompatActivity
+import androidx.arch.core.util.Function
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -13,28 +15,32 @@ import net.cattaka.android.learnscopedstorage.adapter.OperationInfoAdapter
 import net.cattaka.android.learnscopedstorage.data.OperationDestination
 import net.cattaka.android.learnscopedstorage.data.OperationInfo
 import net.cattaka.android.learnscopedstorage.data.OperationTarget
+import net.cattaka.android.learnscopedstorage.data.OperationType
 import net.cattaka.android.learnscopedstorage.databinding.ActivityMainBinding
+import permissions.dispatcher.NeedsPermission
+import permissions.dispatcher.RuntimePermissions
 import java.io.File
 
+@RuntimePermissions
 class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
     lateinit var adapter: OperationInfoAdapter
 
     val operationInfoAdapterListener = object : OperationInfoAdapter.OperationInfoAdapterListener {
         override fun onCLickCreate(holder: OperationInfoAdapter.ViewHolder, info: OperationInfo) {
-            info.targetValue.create(this@MainActivity, info)
+            doWithCheckPermission(OperationType.CREATE, info)
         }
 
         override fun onCLickDelete(holder: OperationInfoAdapter.ViewHolder, info: OperationInfo) {
-            info.targetValue.delete(this@MainActivity, info)
+            doWithCheckPermission(OperationType.DELETE, info)
         }
 
         override fun onCLickRead(holder: OperationInfoAdapter.ViewHolder, info: OperationInfo) {
-            info.targetValue.read(this@MainActivity, info)
+            doWithCheckPermission(OperationType.READ, info)
         }
 
         override fun onCLickWrite(holder: OperationInfoAdapter.ViewHolder, info: OperationInfo) {
-            info.targetValue.write(this@MainActivity, info)
+            doWithCheckPermission(OperationType.WRITE, info)
         }
     }
 
@@ -102,5 +108,53 @@ class MainActivity : AppCompatActivity() {
         }
 
         return items
+    }
+
+    private fun doWithCheckPermission(type: OperationType, info: OperationInfo) {
+        when (info.destinationValue) {
+            OperationDestination.MEDIA_STORE -> {
+                when (type) {
+                    OperationType.CREATE -> info.targetValue.createClassic(this, info)
+                    OperationType.DELETE -> info.targetValue.deleteClassic(this, info)
+                    OperationType.READ -> info.targetValue.readClassic(this, info)
+                    OperationType.WRITE -> info.targetValue.writeClassic(this, info)
+                }
+            }
+            OperationDestination.INTERNAL -> {
+                when (type) {
+                    OperationType.CREATE -> info.targetValue.createClassic(this, info)
+                    OperationType.DELETE -> info.targetValue.deleteClassic(this, info)
+                    OperationType.READ -> info.targetValue.readClassic(this, info)
+                    OperationType.WRITE -> info.targetValue.writeClassic(this, info)
+                }
+            }
+            OperationDestination.EXTERNAL -> {
+                val f = Function<MainActivity, Unit> { activity ->
+                    when (type) {
+                        OperationType.CREATE -> info.targetValue.createClassic(activity, info)
+                        OperationType.DELETE -> info.targetValue.deleteClassic(activity, info)
+                        OperationType.READ -> info.targetValue.readClassic(activity, info)
+                        OperationType.WRITE -> info.targetValue.writeClassic(activity, info)
+                    }
+                }
+                when (type) {
+                    OperationType.READ -> readActionWithPermissionCheck(f)
+                    OperationType.CREATE,
+                    OperationType.DELETE,
+                    OperationType.WRITE -> writeActionWithPermissionCheck(f)
+                }
+
+            }
+        }
+    }
+
+    @NeedsPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+    fun readAction(f: Function<MainActivity, Unit>) {
+        f.apply(this)
+    }
+
+    @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    fun writeAction(f: Function<MainActivity, Unit>) {
+        f.apply(this)
     }
 }

@@ -21,11 +21,13 @@ enum class OperationTarget {
     ;
 
     @Throws(IOException::class)
-    fun create(activity: AppCompatActivity, info: OperationInfo) {
-        write(activity, info)
+    fun createClassic(activity: AppCompatActivity, info: OperationInfo) {
+        wrap(activity) {
+            FileOutputStream(File(info.pathValue)).use {}
+        }
     }
 
-    fun delete(activity: AppCompatActivity, info: OperationInfo) {
+    fun deleteClassic(activity: AppCompatActivity, info: OperationInfo) {
         wrap(activity) {
             File(info.pathValue).let {
                 if (it.exists()) {
@@ -38,7 +40,7 @@ enum class OperationTarget {
         }
     }
 
-    fun read(activity: AppCompatActivity, info: OperationInfo) {
+    fun readClassic(activity: AppCompatActivity, info: OperationInfo) {
         when (info.targetValue) {
             IMAGE -> {
                 PhotoDialog.newInstance(info.pathValue)
@@ -61,7 +63,7 @@ enum class OperationTarget {
     }
 
     @Throws(IOException::class)
-    fun write(activity: AppCompatActivity, info: OperationInfo) {
+    fun writeClassic(activity: AppCompatActivity, info: OperationInfo) {
         wrap(activity) {
             FileOutputStream(File(info.pathValue)).use { fout ->
                 FileInputStream(info.assetFileValue.fileDescriptor).use { fin ->
@@ -69,8 +71,8 @@ enum class OperationTarget {
                     val buffer = ByteArray(info.assetFileValue.length.toInt())
                     fin.read(buffer)
                     fout.write(buffer)
-                    fout.flush()
                 }
+                fout.flush()
             }
         }
     }
