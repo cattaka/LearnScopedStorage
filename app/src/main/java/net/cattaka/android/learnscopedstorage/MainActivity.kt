@@ -52,13 +52,17 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
         }
 
         override fun onCLickCopyUri(holder: OperationInfoAdapter.ViewHolder, info: OperationInfo) {
-            val uri = OperationTarget.findUri(this@MainActivity, info)
-            if (uri != null) {
-                val cm = (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
-                cm.setPrimaryClip(ClipData.newPlainText("Uri for ContentResolver", uri.toString()))
-                Toast.makeText(this@MainActivity, "Copied : $uri", Toast.LENGTH_SHORT).show()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val uri = OperationTarget.findUri(this@MainActivity, info)
+                if (uri != null) {
+                    val cm = (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
+                    cm.setPrimaryClip(ClipData.newPlainText("Uri for ContentResolver", uri.toString()))
+                    Toast.makeText(this@MainActivity, "Copied : $uri", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Failed", Toast.LENGTH_SHORT).show()
+                }
             } else {
-                Toast.makeText(this@MainActivity, "Failed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "This is not work with under Q", Toast.LENGTH_SHORT).show()
             }
         }
     }

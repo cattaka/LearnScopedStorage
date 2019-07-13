@@ -1,5 +1,6 @@
 package net.cattaka.android.learnscopedstorage.data
 
+import android.annotation.TargetApi
 import android.content.ContentUris
 import android.content.ContentValues
 import android.net.Uri
@@ -253,6 +254,7 @@ enum class OperationTarget() {
             }
         }
 
+        @TargetApi(Build.VERSION_CODES.O)
         fun findUri(activity: AppCompatActivity, info: OperationInfo): Uri? {
             val uri = Uri.parse(info.pathValue)
             val displayName = uri.lastPathSegment ?: uri.toString()
@@ -266,8 +268,7 @@ enum class OperationTarget() {
             return resolver.query(
                     collectionUri,
                     null,
-                    "${MediaStore.MediaColumns.DISPLAY_NAME} = ?",
-                    arrayOf(displayName),
+                    bundleOf(MediaStore.MediaColumns.DISPLAY_NAME to displayName),
                     null
             )?.use { c ->
                 while (c.moveToNext()) {
