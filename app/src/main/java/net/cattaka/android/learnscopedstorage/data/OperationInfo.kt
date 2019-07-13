@@ -5,13 +5,14 @@ import android.net.Uri
 import androidx.databinding.ObservableField
 
 class OperationInfo(
-    _assetsFile: AssetFileDescriptor,
-    _label: String,
-    _path: String,
-    _mime: String,
-    _target: OperationTarget,
-    _destination: OperationDestination,
-    val getContentUri: (volumeName: String) -> Uri
+        _assetsFile: AssetFileDescriptor,
+        _label: String,
+        _path: String,
+        _mime: String,
+        _target: OperationTarget,
+        _destination: OperationDestination,
+        val externalContentUri: Uri,
+        val getContentUri: (volumeName: String) -> Uri
 ) {
     val assetFile: ObservableField<AssetFileDescriptor> = ObservableField()
     val label: ObservableField<String> = ObservableField()

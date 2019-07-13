@@ -1,13 +1,16 @@
 package net.cattaka.android.learnscopedstorage.data
 
+import android.content.ContentUris
 import android.content.ContentValues
 import android.net.Uri
 import android.os.Build
+import android.provider.BaseColumns
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
+import net.cattaka.android.learnscopedstorage.BuildConfig
 import net.cattaka.android.learnscopedstorage.dialog.AudioDialog
 import net.cattaka.android.learnscopedstorage.dialog.PhotoDialog
 import net.cattaka.android.learnscopedstorage.dialog.TextDialog
@@ -38,32 +41,14 @@ enum class OperationTarget() {
                     it.delete()
                 } else {
                     Toast.makeText(activity, "File is not exist : ${it.path}", Toast.LENGTH_SHORT)
-                        .show()
+                            .show()
                 }
             }
         }
     }
 
     fun readClassic(activity: AppCompatActivity, info: OperationInfo) {
-        when (info.targetValue) {
-            IMAGE -> {
-                PhotoDialog.newInstance(info.pathValue)
-                    .show(activity.supportFragmentManager, "PHOTO_DIALOG")
-            }
-            AUDIO -> {
-                AudioDialog.newInstance(info.pathValue)
-                    .show(activity.supportFragmentManager, "AUDIO_DIALOG")
-            }
-            MOVIE -> {
-                VideoDialog.newInstance(info.pathValue)
-                    .show(activity.supportFragmentManager, "VIDEO_DIALOG")
-            }
-            DOWNLOAD,
-            OTHER -> {
-                TextDialog.newInstance(info.pathValue)
-                    .show(activity.supportFragmentManager, "TEXT_DIALOG")
-            }
-        }
+        openByDialog(activity, info.targetValue, Uri.parse(info.pathValue))
     }
 
     fun writeClassic(activity: AppCompatActivity, info: OperationInfo) {
@@ -86,6 +71,7 @@ enum class OperationTarget() {
             val uri = Uri.parse(info.pathValue)
             val displayName = uri.lastPathSegment ?: uri.toString()
             val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.RELATIVE_PATH, BuildConfig.APPLICATION_ID)
                 put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
                 put(MediaStore.MediaColumns.MIME_TYPE, info.mimeValue)
                 put(MediaStore.MediaColumns.IS_PENDING, 0)
@@ -108,6 +94,7 @@ enum class OperationTarget() {
             val uri = Uri.parse(info.pathValue)
             val displayName = uri.lastPathSegment ?: uri.toString()
             val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.RELATIVE_PATH, BuildConfig.APPLICATION_ID)
                 put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
                 put(MediaStore.MediaColumns.MIME_TYPE, info.mimeValue)
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
@@ -146,10 +133,10 @@ enum class OperationTarget() {
             val collection = info.getContentUri(MediaStore.VOLUME_EXTERNAL)
             val collectionWithPending = MediaStore.setIncludePending(collection)
             val itemUri = resolver.query(
-                collectionWithPending,
-                null,
-                bundleOf(MediaStore.MediaColumns.DISPLAY_NAME to displayName),
-                null
+                    collectionWithPending,
+                    null,
+                    bundleOf(MediaStore.MediaColumns.DISPLAY_NAME to displayName),
+                    null
             )?.use { c ->
                 while (c.moveToNext()) {
                     val columnIndex = c.getColumnIndexOrThrow(MediaStore.Images.ImageColumns._ID)
@@ -161,25 +148,7 @@ enum class OperationTarget() {
             }
 
             if (itemUri != null) {
-                when (info.targetValue) {
-                    IMAGE -> {
-                        PhotoDialog.newInstance(itemUri.toString())
-                            .show(activity.supportFragmentManager, "PHOTO_DIALOG")
-                    }
-                    AUDIO -> {
-                        AudioDialog.newInstance(itemUri.toString())
-                            .show(activity.supportFragmentManager, "AUDIO_DIALOG")
-                    }
-                    MOVIE -> {
-                        VideoDialog.newInstance(itemUri.toString())
-                            .show(activity.supportFragmentManager, "VIDEO_DIALOG")
-                    }
-                    DOWNLOAD,
-                    OTHER -> {
-                        TextDialog.newInstance(itemUri.toString())
-                            .show(activity.supportFragmentManager, "TEXT_DIALOG")
-                    }
-                }
+                openByDialog(activity, info.targetValue, itemUri)
             } else {
                 Toast.makeText(activity, "Failed", Toast.LENGTH_SHORT).show()
             }
@@ -196,10 +165,10 @@ enum class OperationTarget() {
             val collection = info.getContentUri(MediaStore.VOLUME_EXTERNAL)
             val collectionWithPending = MediaStore.setIncludePending(collection)
             val count = resolver.query(
-                collectionWithPending,
-                null,
-                bundleOf(MediaStore.MediaColumns.DISPLAY_NAME to displayName),
-                null
+                    collectionWithPending,
+                    null,
+                    bundleOf(MediaStore.MediaColumns.DISPLAY_NAME to displayName),
+                    null
             )?.use { c ->
                 while (c.moveToNext()) {
                     val columnIndex = c.getColumnIndexOrThrow(MediaStore.Images.ImageColumns._ID)
@@ -216,20 +185,100 @@ enum class OperationTarget() {
         }
     }
 
-    private fun wrap(activity: AppCompatActivity, run: () -> Unit) {
-        try {
-            run()
-        } catch (e: Exception) {
-            Toast.makeText(activity, e.concatMessages(), Toast.LENGTH_SHORT).show()
-        }
-    }
+    companion object {
+        fun openViaMediaStore(activity: AppCompatActivity, itemUri: Uri) {
+            wrap(activity) {
+                val prefix2Targets = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    mapOf(
+                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.IMAGE,
+                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.AUDIO,
+                            MediaStore.Video.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.MOVIE,
+                            MediaStore.Downloads.EXTERNAL_CONTENT_URI.toString() to OperationTarget.DOWNLOAD
+                    )
+                } else {
+                    mapOf(
+                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.IMAGE,
+                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.AUDIO,
+                            MediaStore.Video.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.MOVIE
+                    )
+                }
 
-    private fun <T> wrapReturn(activity: AppCompatActivity, defaultValue: T, run: () -> T): T {
-        return try {
-            run()
-        } catch (e: Exception) {
-            Toast.makeText(activity, e.concatMessages(), Toast.LENGTH_SHORT).show()
-            defaultValue
+                val s = itemUri.toString()
+                val target = prefix2Targets.entries.find { s.startsWith(it.key, false) }?.value
+
+                if (target != null) {
+                    openByDialog(activity, target, itemUri)
+                } else {
+                    Toast.makeText(activity, "Could not detect mime for $itemUri", Toast.LENGTH_SHORT).show()
+                    return@wrap
+                }
+            }
+        }
+
+        private fun openByDialog(activity: AppCompatActivity, target: OperationTarget, itemUri: Uri) {
+            when (target) {
+                IMAGE -> {
+                    PhotoDialog.newInstance(itemUri.toString())
+                            .show(activity.supportFragmentManager, "PHOTO_DIALOG")
+                }
+                AUDIO -> {
+                    AudioDialog.newInstance(itemUri.toString())
+                            .show(activity.supportFragmentManager, "AUDIO_DIALOG")
+                }
+                MOVIE -> {
+                    VideoDialog.newInstance(itemUri.toString())
+                            .show(activity.supportFragmentManager, "VIDEO_DIALOG")
+                }
+                DOWNLOAD,
+                OTHER -> {
+                    TextDialog.newInstance(itemUri.toString())
+                            .show(activity.supportFragmentManager, "TEXT_DIALOG")
+                }
+            }
+        }
+
+        private fun wrap(activity: AppCompatActivity, run: () -> Unit) {
+            try {
+                run()
+            } catch (e: Exception) {
+                Toast.makeText(activity, e.concatMessages(), Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        private fun <T> wrapReturn(activity: AppCompatActivity, defaultValue: T, run: () -> T): T {
+            return try {
+                run()
+            } catch (e: Exception) {
+                Toast.makeText(activity, e.concatMessages(), Toast.LENGTH_SHORT).show()
+                defaultValue
+            }
+        }
+
+        fun findUri(activity: AppCompatActivity, info: OperationInfo): Uri? {
+            val uri = Uri.parse(info.pathValue)
+            val displayName = uri.lastPathSegment ?: uri.toString()
+
+            val resolver = activity.contentResolver
+            val collectionUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.setIncludePending(info.getContentUri(MediaStore.VOLUME_EXTERNAL))
+            } else {
+                info.getContentUri("external")
+            }
+            return resolver.query(
+                    collectionUri,
+                    null,
+                    "${MediaStore.MediaColumns.DISPLAY_NAME} = ?",
+                    arrayOf(displayName),
+                    null
+            )?.use { c ->
+                while (c.moveToNext()) {
+                    val columnIndex = c.getColumnIndexOrThrow(BaseColumns._ID)
+                    return@use c.getLong(columnIndex)
+                }
+                return@use null
+            }?.let {
+                ContentUris.withAppendedId(info.externalContentUri, it)
+            }
         }
     }
 }

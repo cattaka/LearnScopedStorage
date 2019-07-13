@@ -1,6 +1,9 @@
 package net.cattaka.android.learnscopedstorage
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -25,6 +28,7 @@ import permissions.dispatcher.NeedsPermission
 import permissions.dispatcher.RuntimePermissions
 import java.io.File
 
+
 @RuntimePermissions
 class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener {
     lateinit var binding: ActivityMainBinding
@@ -45,6 +49,17 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
 
         override fun onCLickWrite(holder: OperationInfoAdapter.ViewHolder, info: OperationInfo) {
             doWithCheckPermission(OperationType.WRITE, info)
+        }
+
+        override fun onCLickCopyUri(holder: OperationInfoAdapter.ViewHolder, info: OperationInfo) {
+            val uri = OperationTarget.findUri(this@MainActivity, info)
+            if (uri != null) {
+                val cm = (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
+                cm.setPrimaryClip(ClipData.newPlainText("Uri for ContentResolver", uri.toString()))
+                Toast.makeText(this@MainActivity, "Copied : $uri", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this@MainActivity, "Failed", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -89,7 +104,8 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
                 "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).path}/photo.png",
                 "image/png",
                 OperationTarget.IMAGE,
-                OperationDestination.EXTERNAL
+                OperationDestination.EXTERNAL,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         ) { volumeName -> MediaStore.Images.Media.getContentUri(volumeName) }
         val audioDirect = OperationInfo(
                 assets.openFd("audio.ogg"),
@@ -97,7 +113,8 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
                 "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).path}/audio.ogg",
                 "audio/ogg",
                 OperationTarget.AUDIO,
-                OperationDestination.EXTERNAL
+                OperationDestination.EXTERNAL,
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         ) { volumeName -> MediaStore.Audio.Media.getContentUri(volumeName) }
         val movieDirect = OperationInfo(
                 assets.openFd("movie.webm"),
@@ -105,7 +122,8 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
                 "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).path}/movie.webm",
                 "video/webm",
                 OperationTarget.MOVIE,
-                OperationDestination.EXTERNAL
+                OperationDestination.EXTERNAL,
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         ) { volumeName -> MediaStore.Video.Media.getContentUri(volumeName) }
         val downloadDirect = OperationInfo(
                 assets.openFd("text.txt"),
@@ -113,7 +131,13 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
                 "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path}/text.txt",
                 "plain/text",
                 OperationTarget.DOWNLOAD,
-                OperationDestination.EXTERNAL
+                OperationDestination.EXTERNAL,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    MediaStore.Downloads.EXTERNAL_CONTENT_URI
+                } else {
+                    // Dummy Uri
+                    Uri.fromFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS))
+                }
         ) { volumeName ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 MediaStore.Downloads.getContentUri(volumeName)
@@ -138,6 +162,7 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
                                 info.mimeValue,
                                 info.targetValue,
                                 OperationDestination.MEDIA_STORE,
+                                info.externalContentUri,
                                 info.getContentUri
                         )
                 )
@@ -200,6 +225,8 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
     }
 
     override fun onClickInputUriDialogOk(uri: String) {
-        Toast.makeText(this, "Not implemented yet : $uri", Toast.LENGTH_SHORT).show()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            OperationTarget.openViaMediaStore(this, Uri.parse(uri))
+        }
     }
 }
