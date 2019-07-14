@@ -13,7 +13,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.arch.core.util.Function
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -93,6 +92,14 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
         return when (item.itemId) {
             R.id.action_open_uri -> {
                 InputUriDialog.newInstance().show(supportFragmentManager, "INPUT_URI_DIALOG")
+                true
+            }
+            R.id.action_request_read_permission -> {
+                requestReadPermissionWithPermissionCheck()
+                true
+            }
+            R.id.action_request_write_permission -> {
+                requestWritePermissionWithPermissionCheck()
                 true
             }
             else -> {
@@ -207,7 +214,8 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
                     OperationType.WRITE -> info.targetValue.writeViaMediaStore(this, info)
                 }
             }
-            OperationDestination.INTERNAL -> {
+            OperationDestination.INTERNAL,
+            OperationDestination.EXTERNAL -> {
                 when (type) {
                     OperationType.CREATE -> info.targetValue.createClassic(this, info)
                     OperationType.DELETE -> info.targetValue.deleteClassic(this, info)
@@ -215,34 +223,17 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
                     OperationType.WRITE -> info.targetValue.writeClassic(this, info)
                 }
             }
-            OperationDestination.EXTERNAL -> {
-                val f = Function<MainActivity, Unit> { activity ->
-                    when (type) {
-                        OperationType.CREATE -> info.targetValue.createClassic(activity, info)
-                        OperationType.DELETE -> info.targetValue.deleteClassic(activity, info)
-                        OperationType.READ -> info.targetValue.readClassic(activity, info)
-                        OperationType.WRITE -> info.targetValue.writeClassic(activity, info)
-                    }
-                }
-                when (type) {
-                    OperationType.READ -> readActionWithPermissionCheck(f)
-                    OperationType.CREATE,
-                    OperationType.DELETE,
-                    OperationType.WRITE -> writeActionWithPermissionCheck(f)
-                }
-
-            }
         }
     }
 
     @NeedsPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-    fun readAction(f: Function<MainActivity, Unit>) {
-        f.apply(this)
+    fun requestReadPermission() {
+        Toast.makeText(this, "READ_EXTERNAL_STORAGE is acquired.", Toast.LENGTH_SHORT).show()
     }
 
     @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-    fun writeAction(f: Function<MainActivity, Unit>) {
-        f.apply(this)
+    fun requestWritePermission() {
+        Toast.makeText(this, "WRITE_EXTERNAL_STORAGE is acquired.", Toast.LENGTH_SHORT).show()
     }
 
     override fun onClickInputUriDialogOk(uri: String) {

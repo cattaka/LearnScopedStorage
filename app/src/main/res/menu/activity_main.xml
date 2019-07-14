@@ -4,4 +4,12 @@
     <item
         android:id="@+id/action_open_uri"
         android:title="Open Uri" />
+
+    <item
+        android:id="@+id/action_request_read_permission"
+        android:title="Request READ_EXTERNAL_STORAGE" />
+
+    <item
+        android:id="@+id/action_request_write_permission"
+        android:title="Request WRITE_EXTERNAL_STORAGE" />
 </menu>
