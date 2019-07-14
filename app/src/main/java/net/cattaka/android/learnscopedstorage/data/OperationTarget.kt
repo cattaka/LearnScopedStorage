@@ -39,7 +39,7 @@ enum class OperationTarget() {
                     it.delete()
                 } else {
                     Toast.makeText(activity, "File is not exist : ${it.path}", Toast.LENGTH_SHORT)
-                            .show()
+                        .show()
                 }
             }
         }
@@ -174,16 +174,16 @@ enum class OperationTarget() {
             wrap(activity) {
                 val prefix2Targets = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     mapOf(
-                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.IMAGE,
-                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.AUDIO,
-                            MediaStore.Video.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.MOVIE,
-                            MediaStore.Downloads.EXTERNAL_CONTENT_URI.toString() to OperationTarget.DOWNLOAD
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.IMAGE,
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.AUDIO,
+                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.MOVIE,
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI.toString() to OperationTarget.DOWNLOAD
                     )
                 } else {
                     mapOf(
-                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.IMAGE,
-                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.AUDIO,
-                            MediaStore.Video.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.MOVIE
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.IMAGE,
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.AUDIO,
+                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI.toString() to OperationTarget.MOVIE
                     )
                 }
 
@@ -193,30 +193,38 @@ enum class OperationTarget() {
                 if (target != null) {
                     openByDialog(activity, target, itemUri)
                 } else {
-                    Toast.makeText(activity, "Could not detect mime for $itemUri", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        activity,
+                        "Could not detect mime for $itemUri",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     return@wrap
                 }
             }
         }
 
-        private fun openByDialog(activity: AppCompatActivity, target: OperationTarget, itemUri: Uri) {
+        private fun openByDialog(
+            activity: AppCompatActivity,
+            target: OperationTarget,
+            itemUri: Uri
+        ) {
             when (target) {
                 IMAGE -> {
                     PhotoDialog.newInstance(itemUri.toString())
-                            .show(activity.supportFragmentManager, "PHOTO_DIALOG")
+                        .show(activity.supportFragmentManager, "PHOTO_DIALOG")
                 }
                 AUDIO -> {
                     AudioDialog.newInstance(itemUri.toString())
-                            .show(activity.supportFragmentManager, "AUDIO_DIALOG")
+                        .show(activity.supportFragmentManager, "AUDIO_DIALOG")
                 }
                 MOVIE -> {
                     VideoDialog.newInstance(itemUri.toString())
-                            .show(activity.supportFragmentManager, "VIDEO_DIALOG")
+                        .show(activity.supportFragmentManager, "VIDEO_DIALOG")
                 }
                 DOWNLOAD,
                 OTHER -> {
                     TextDialog.newInstance(itemUri.toString())
-                            .show(activity.supportFragmentManager, "TEXT_DIALOG")
+                        .show(activity.supportFragmentManager, "TEXT_DIALOG")
                 }
             }
         }
@@ -238,17 +246,21 @@ enum class OperationTarget() {
             }
         }
 
-        fun findUri(activity: AppCompatActivity, info: OperationInfo, includePending: Boolean = true): Uri? {
+        fun findUri(
+            activity: AppCompatActivity,
+            info: OperationInfo,
+            includePending: Boolean = true
+        ): Uri? {
             val uri = Uri.parse(info.pathValue)
             val displayName = uri.lastPathSegment ?: uri.toString()
 
             val resolver = activity.contentResolver
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 resolver.query(
-                        MediaStore.setIncludePending(info.getContentUri(MediaStore.VOLUME_EXTERNAL)),
-                        null,
-                        bundleOf(MediaStore.MediaColumns.DISPLAY_NAME to displayName),
-                        null
+                    MediaStore.setIncludePending(info.getContentUri(MediaStore.VOLUME_EXTERNAL)),
+                    null,
+                    bundleOf(MediaStore.MediaColumns.DISPLAY_NAME to displayName),
+                    null
                 )?.use { c ->
                     while (c.moveToNext()) {
                         val columnIndex = c.getColumnIndexOrThrow(BaseColumns._ID)
@@ -258,11 +270,11 @@ enum class OperationTarget() {
                 }
             } else {
                 resolver.query(
-                        info.externalContentUri,
-                        null,
-                        "${MediaStore.MediaColumns.DISPLAY_NAME}=?",
-                        arrayOf(displayName),
-                        null
+                    info.externalContentUri,
+                    null,
+                    "${MediaStore.MediaColumns.DISPLAY_NAME}=?",
+                    arrayOf(displayName),
+                    null
                 )?.use { c ->
                     while (c.moveToNext()) {
                         val columnIndex = c.getColumnIndexOrThrow(BaseColumns._ID)
