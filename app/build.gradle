@@ -36,6 +36,11 @@ android {
             targetSdkVersion 29
             applicationIdSuffix ".v29"
         }
+        v29l {
+            dimension "api"
+            targetSdkVersion 29
+            applicationIdSuffix ".v29l"
+        }
     }
     dataBinding {
         enabled true

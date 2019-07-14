@@ -147,13 +147,32 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 MediaStore.Downloads.getContentUri(volumeName)
             } else {
-                throw IllegalArgumentException("Error case")
+                // Error case
+                throw IllegalArgumentException("Not supported")
             }
+        }
+        val otherDirect = OperationInfo(
+            "other.txt",
+            "Other",
+            "${Environment.getExternalStorageDirectory().path}/other.txt",
+            "plain/text",
+            OperationTarget.OTHER,
+            OperationDestination.EXTERNAL,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI
+            } else {
+                // Not supported: Just a dummy uri
+                Uri.fromFile(Environment.getExternalStorageDirectory())
+            }
+        ) { volumeName ->
+            // Error case
+            throw IllegalArgumentException("Not supported")
         }
         items.add(photoDirect)
         items.add(audioDirect)
         items.add(movieDirect)
         items.add(downloadDirect)
+        items.add(otherDirect)
 
         for (info in arrayOf(photoDirect, audioDirect, movieDirect)) {
             val mediaStoreUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
