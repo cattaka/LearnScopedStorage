@@ -181,7 +181,12 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
         items.add(downloadDirect)
         items.add(otherDirect)
 
-        for (info in arrayOf(photoDirect, audioDirect, movieDirect)) {
+        val viaMediaStore = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            arrayOf(photoDirect, audioDirect, movieDirect, downloadDirect)
+        } else {
+            arrayOf(photoDirect, audioDirect, movieDirect)
+        }
+        for (info in viaMediaStore) {
             val mediaStoreUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 MediaStore.setRequireOriginal(Uri.fromFile(File(info.path.get()!!))).toString()
             } else {
