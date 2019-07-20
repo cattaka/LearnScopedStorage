@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -100,6 +101,10 @@ class MainActivity : AppCompatActivity(), InputUriDialog.InputUriDialogListener 
             }
             R.id.action_request_write_permission -> {
                 requestWritePermissionWithPermissionCheck()
+                true
+            }
+            R.id.action_show_path_list -> {
+                startActivity(Intent(this, PathListActivity::class.java))
                 true
             }
             else -> {
