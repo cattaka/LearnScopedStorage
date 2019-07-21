@@ -101,7 +101,11 @@ enum class OperationTarget() {
             }
             val item = displayName.let {
                 val values = ContentValues().apply {
-                    //put(MediaStore.MediaColumns.RELATIVE_PATH, ""/*TODO*/)
+                    // put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/hoge")
+                    // Image: DCIM, Pictures
+                    // Audio: Alarms, Music, Notifications, Podcasts, Ringtones
+                    // Video: DCIM, Movies
+                    // Download: Download
                     put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
                     put(MediaStore.MediaColumns.MIME_TYPE, info.mimeValue)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -116,19 +120,30 @@ enum class OperationTarget() {
                 resolver.insert(collection, values)
             }
             item?.let { item ->
-                resolver.openFileDescriptor(item, "w", null)?.let { pfd ->
+                resolver.openOutputStream(item)?.use { fout ->
                     activity.assets.openFd(info.assetFileValue).use { afd ->
-                        FileOutputStream(pfd.fileDescriptor).use { fout ->
-                            FileInputStream(afd.fileDescriptor).use { fin ->
-                                fin.skip(afd.startOffset)
-                                val buffer = ByteArray(afd.length.toInt())
-                                fin.read(buffer)
-                                fout.write(buffer)
-                            }
-                            fout.flush()
+                        FileInputStream(afd.fileDescriptor).use { fin ->
+                            fin.skip(afd.startOffset)
+                            val buffer = ByteArray(afd.length.toInt())
+                            fin.read(buffer)
+                            fout.write(buffer)
                         }
+                        fout.flush()
                     }
                 }
+//                resolver.openFileDescriptor(item, "w", null)?.let { pfd ->
+//                    activity.assets.openFd(info.assetFileValue).use { afd ->
+//                        FileOutputStream(pfd.fileDescriptor).use { fout ->
+//                            FileInputStream(afd.fileDescriptor).use { fin ->
+//                                fin.skip(afd.startOffset)
+//                                val buffer = ByteArray(afd.length.toInt())
+//                                fin.read(buffer)
+//                                fout.write(buffer)
+//                            }
+//                            fout.flush()
+//                        }
+//                    }
+//                }
 
                 val values = ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)

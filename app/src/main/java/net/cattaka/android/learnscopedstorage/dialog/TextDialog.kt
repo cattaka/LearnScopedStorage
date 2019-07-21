@@ -15,6 +15,7 @@ import net.cattaka.android.learnscopedstorage.databinding.DialogTextBinding
 import net.cattaka.android.learnscopedstorage.util.concatMessages
 import java.io.File
 import java.io.FileReader
+import java.io.InputStreamReader
 
 class TextDialog : AppCompatDialogFragment() {
     lateinit var binding: DialogTextBinding
@@ -61,8 +62,8 @@ class TextDialog : AppCompatDialogFragment() {
     private fun readRawViaMediaStore(path: String): String {
         return if (path.startsWith("content://", false)) {
             val resolver = requireContext().contentResolver
-            resolver.openFileDescriptor(Uri.parse(path), "r", null)?.use { pfd ->
-                FileReader(pfd.fileDescriptor).use { it.readLines().joinToString("\n") }
+            resolver.openInputStream(Uri.parse(path))?.use {
+                InputStreamReader(it).readLines().joinToString("\n")
             } ?: ""
         } else {
             FileReader(File(path)).use { it.readLines().joinToString("\n") }
